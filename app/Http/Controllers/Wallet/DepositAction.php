@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Wallet\DepositRequest;
 use App\Http\Resources\Wallet\TransactionResource;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class DepositAction extends Controller
@@ -16,6 +17,9 @@ class DepositAction extends Controller
     ){
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function __invoke(DepositRequest $request): JsonResponse
     {
         $depositDto = $request->getValidatedData();
