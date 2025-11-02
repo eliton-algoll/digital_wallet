@@ -2,14 +2,20 @@
 
 use App\Http\Controllers\Users\AuthAction;
 use App\Http\Controllers\Users\UserStoreAction;
+use App\Http\Controllers\Wallet\DepositAction;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['api'])->group(function () {
+Route::middleware('api')->group(function () {
     Route::get('/', function () {
         return response()->json(['api' => config('app.name'), 'env' => config('app.env'), 'time' => now()]);
     });
 
     Route::post('users', UserStoreAction::class);
     Route::post('login', AuthAction::class);
-});
 
+    Route::middleware(['auth:sanctum', 'auth'])->group(function() {
+        Route::prefix('wallet')->group(function() {
+            Route::post('deposit', DepositAction::class);
+        });
+    });
+});

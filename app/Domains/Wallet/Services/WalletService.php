@@ -2,9 +2,12 @@
 
 namespace App\Domains\Wallet\Services;
 
+use App\Domains\Wallet\DTOs\UpdateBalanceDTO;
 use App\Domains\Wallet\DTOs\WalletStoreDTO;
 use App\Domains\Wallet\Models\Wallet;
 use App\Domains\Wallet\Repositories\IWalletRepository;
+use Carbon\Carbon;
+use Nette\Schema\ValidationException;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -28,6 +31,20 @@ class WalletService
             ]);
 
             throw $th;
+        }
+    }
+
+    public function updateBalance(UpdateBalanceDTO $updateBalanceDTO): void
+    {
+        $this->walletRepository->updateBalance($updateBalanceDTO);
+    }
+
+    public function checkDailyDepositLimit(Wallet $wallet, float $amount): void
+    {
+        $totalToday = $this->walletRepository->getDailyDepositTotal($wallet, Carbon::today());
+
+        if (($totalToday + $amount) > $wallet->daily_deposit_limit) {
+            throw new ValidationException('Daily deposit limit exceeded');
         }
     }
 }

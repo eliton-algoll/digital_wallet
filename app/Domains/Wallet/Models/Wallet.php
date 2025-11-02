@@ -3,6 +3,7 @@
 namespace App\Domains\Wallet\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Wallet extends Model
 {
@@ -24,4 +25,9 @@ class Wallet extends Model
         'daily_withdrawal_limit' => 'float',
         'daily_deposit_limit' => 'float',
     ];
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
 }

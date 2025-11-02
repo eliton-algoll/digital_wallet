@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid');
             $table->foreignId('wallet_id')->constrained('wallets');
             $table->float('amount');
             $table->enum('type', ['DEPOSIT', 'WITHDRAWAL', 'TRANSFER']);
