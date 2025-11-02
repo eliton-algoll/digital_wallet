@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\AuthenticateApi;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,7 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'auth' => AuthenticateApi::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (Throwable $e, Request $request) {
@@ -30,6 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 if (method_exists($e, 'getStatusCode')) {
                     return response()->json(['message' => $e->getMessage() ?: 'Error'], $e->getStatusCode());
+                }
+
+                if ($e instanceof AuthenticationException) {
+                    return response()->json(['message' => 'Unauthenticated.'], 401);
                 }
 
                 return response()->json(['message' => $e->getMessage() ?: 'Internal Server Error'], 500);
