@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Users\AuthAction;
 use App\Http\Controllers\Users\UserStoreAction;
 use Illuminate\Support\Facades\Route;
 
@@ -9,5 +10,6 @@ Route::middleware(['api'])->group(function () {
     });
 
     Route::post('users', UserStoreAction::class);
+    Route::post('login', AuthAction::class);
 });
 

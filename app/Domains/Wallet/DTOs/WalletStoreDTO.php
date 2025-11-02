@@ -4,7 +4,7 @@ namespace App\Domains\Wallet\DTOs;
 
 use App\Domains\User\Models\User;
 
-final class WalletStoreDTO
+final readonly class WalletStoreDTO
 {
     public function __construct(
         public readonly User $user,
