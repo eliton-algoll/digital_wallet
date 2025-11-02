@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class BalanceAction extends Controller
+class ShowBalanceAction extends Controller
 {
     public function __construct(
         private readonly WalletService $walletService,

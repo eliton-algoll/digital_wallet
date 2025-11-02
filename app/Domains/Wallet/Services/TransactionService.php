@@ -2,6 +2,7 @@
 
 namespace App\Domains\Wallet\Services;
 
+use App\Domains\User\Models\User;
 use App\Domains\User\Services\UserService;
 use App\Domains\Wallet\DTOs\TransactionStoreDTO;
 use App\Domains\Wallet\DTOs\TransferDTO;
@@ -10,6 +11,7 @@ use App\Domains\Wallet\Enums\TransactionType;
 use App\Domains\Wallet\Enums\WalletBalanceAction;
 use App\Domains\Wallet\Models\Transaction;
 use App\Domains\Wallet\Repositories\ITransactionRepository;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Psr\Log\LoggerInterface;
@@ -165,5 +167,10 @@ readonly class TransactionService
 
             throw new RuntimeException('Unexpected error while storing transfer' );
         }
+    }
+
+    public function list(User $user, array $filters, array $sortBy, int $perPage): LengthAwarePaginator
+    {
+        return $this->transactionRepository->list($user->wallet->id, $filters, $sortBy, $perPage);
     }
 }
