@@ -3,6 +3,7 @@
 use App\Http\Controllers\Users\AuthAction;
 use App\Http\Controllers\Users\UserStoreAction;
 use App\Http\Controllers\Wallet\DepositAction;
+use App\Http\Controllers\Wallet\WithdrawalAction;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('api')->group(function () {
@@ -16,6 +17,7 @@ Route::middleware('api')->group(function () {
     Route::middleware(['auth:sanctum', 'auth'])->group(function() {
         Route::prefix('wallet')->group(function() {
             Route::post('deposit', DepositAction::class);
+            Route::post('withdrawal', WithdrawalAction::class);
         });
     });
 });

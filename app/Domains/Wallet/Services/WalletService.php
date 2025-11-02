@@ -48,7 +48,7 @@ readonly class WalletService
 
         if (($totalToday + $amount) > $wallet->daily_deposit_limit) {
             throw ValidationException::withMessages([
-                'amount' => ['Daily deposit limit exceeded.']
+                'amount' => [sprintf('Daily %s limit exceeded.', $type->value)]
             ]);
         }
     }
