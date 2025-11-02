@@ -2,6 +2,7 @@
 
 namespace App\Domains\Wallet\Services;
 
+use App\Domains\User\Models\User;
 use App\Domains\Wallet\DTOs\UpdateBalanceDTO;
 use App\Domains\Wallet\DTOs\WalletStoreDTO;
 use App\Domains\Wallet\Enums\TransactionType;
@@ -51,5 +52,10 @@ readonly class WalletService
                 'amount' => [sprintf('Daily %s limit exceeded.', $type->value)]
             ]);
         }
+    }
+
+    public function getWallet(User $user): wallet
+    {
+        return $user->wallet;
     }
 }

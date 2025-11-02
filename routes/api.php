@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Users\AuthAction;
 use App\Http\Controllers\Users\UserStoreAction;
+use App\Http\Controllers\Wallet\BalanceAction;
 use App\Http\Controllers\Wallet\DepositAction;
 use App\Http\Controllers\Wallet\WithdrawalAction;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,7 @@ Route::middleware('api')->group(function () {
         Route::prefix('wallet')->group(function() {
             Route::post('deposit', DepositAction::class);
             Route::post('withdrawal', WithdrawalAction::class);
+            Route::get('balance', BalanceAction::class);
         });
     });
 });
