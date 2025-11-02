@@ -34,11 +34,11 @@ class WalletRepository implements IWalletRepository
         $wallet->save();
     }
 
-    public function getDailyDepositTotal(Wallet $wallet, Carbon $date): float
+    public function getDailyTransactionTotalByType(Wallet $wallet, TransactionType $transactionType): float
     {
         return $wallet->transactions()
-            ->where('type', TransactionType::DEPOSIT)
-            ->whereDate('created_at', $date)
+            ->where('type', $transactionType)
+            ->whereDate('created_at', Carbon::today())
             ->sum('amount');
     }
 }
