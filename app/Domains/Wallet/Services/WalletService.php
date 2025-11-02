@@ -45,6 +45,10 @@ readonly class WalletService
      */
     public function checkDailyTransactionLimitByType(Wallet $wallet, float $amount, TransactionType $type): void
     {
+        if (!in_array($type->value, [TransactionType::DEPOSIT->value, TransactionType::WITHDRAWAL->value])) {
+            return;
+        }
+
         $totalToday = $this->walletRepository->getDailyTransactionTotalByType($wallet, $type);
 
         if (($totalToday + $amount) > $wallet->daily_deposit_limit) {

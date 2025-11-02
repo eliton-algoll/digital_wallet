@@ -2,7 +2,9 @@
 
 namespace App\Domains\Wallet\Services;
 
+use App\Domains\User\Services\UserService;
 use App\Domains\Wallet\DTOs\TransactionStoreDTO;
+use App\Domains\Wallet\DTOs\TransferDTO;
 use App\Domains\Wallet\DTOs\UpdateBalanceDTO;
 use App\Domains\Wallet\Enums\TransactionType;
 use App\Domains\Wallet\Enums\WalletBalanceAction;
@@ -19,6 +21,7 @@ readonly class TransactionService
     public function __construct(
         private readonly ITransactionRepository $transactionRepository,
         private readonly WalletService $walletService,
+        private readonly UserService $userService,
         private readonly LoggerInterface $logger
     ) {
 
@@ -28,7 +31,7 @@ readonly class TransactionService
         try {
             DB::beginTransaction();
 
-            $transaction = $this->createTransaction($transactionStoreDTO, TransactionType::DEPOSIT);
+            $transaction = $this->createTransaction($transactionStoreDTO);
 
             DB::commit();
 
@@ -58,12 +61,12 @@ readonly class TransactionService
     /**
      * @throws ValidationException
      */
-    private function createTransaction(TransactionStoreDTO $transactionStoreDTO, TransactionType $transactionType): transaction {
+    private function createTransaction(TransactionStoreDTO $transactionStoreDTO): transaction {
         $wallet = $transactionStoreDTO->user->wallet;
 
-        $this->walletService->checkDailyTransactionLimitByType($wallet, $transactionStoreDTO->amount, $transactionType);
+        $this->walletService->checkDailyTransactionLimitByType($wallet, $transactionStoreDTO->amount, $transactionStoreDTO->type);
 
-        if ($transactionType === TransactionType::WITHDRAWAL) {
+        if ($transactionStoreDTO->type === TransactionType::WITHDRAWAL || $transactionStoreDTO->type === TransactionType::TRANSFER_OUT) {
             if ($wallet->balance < $transactionStoreDTO->amount) {
                 throw ValidationException::withMessages(['amount' => ['Insufficient balance.']]);
             }
@@ -71,9 +74,11 @@ readonly class TransactionService
 
         $transaction = $this->transactionRepository->store($transactionStoreDTO);
 
+        $updateBalanceType = in_array($transactionStoreDTO->type->value, [TransactionType::DEPOSIT->value, TransactionType::TRANSFER_IN->value]) ? WalletBalanceAction::CREDIT : WalletBalanceAction::DEBIT;
+
         $updateBalanceDTO = new UpdateBalanceDTO(
             wallet: $wallet,
-            balanceAction: WalletBalanceAction::DEBIT,
+            balanceAction: $updateBalanceType,
             amount: $transactionStoreDTO->amount,
         );
 
@@ -86,7 +91,7 @@ readonly class TransactionService
         try {
             DB::beginTransaction();
 
-            $transaction = $this->createTransaction($transactionStoreDTO, TransactionType::WITHDRAWAL);
+            $transaction = $this->createTransaction($transactionStoreDTO);
 
             DB::commit();
 
@@ -110,6 +115,55 @@ readonly class TransactionService
             DB::rollBack();
 
             throw new RuntimeException('Unexpected error while storing deposit' );
+        }
+    }
+
+    public function transfer(TransferDTO $transferDTO): Transaction {
+        try {
+            DB::beginTransaction();
+
+            $recipientUser = $this->userService->getByEmail($transferDTO->recipient);
+
+            $transferOutTransactionStoreDTO = new TransactionStoreDTO(
+                user: $transferDTO->user,
+                amount: $transferDTO->amount,
+                type: TransactionType::TRANSFER_OUT,
+                transferredWalletId: $recipientUser->wallet->id
+            );
+
+            $transferOutTransaction = $this->createTransaction($transferOutTransactionStoreDTO);
+
+            $transferInTransactionStoreDTO = new TransactionStoreDTO(
+                user: $recipientUser,
+                amount: $transferDTO->amount,
+                type: TransactionType::TRANSFER_IN,
+                transferredWalletId:  $transferDTO->user->wallet->id
+            );
+
+            $this->createTransaction($transferInTransactionStoreDTO);
+
+            DB::commit();
+
+            return $transferOutTransaction;
+        } catch (ValidationException $e) {
+            $this->logger->debug(sprintf('[%s] insufficient balance.', __METHOD__), [
+                'transfer_dto' => $transferDTO->toArray(),
+                'message' => $e->getMessage(),
+            ]);
+
+            DB::rollBack();
+
+            throw $e;
+        } catch (Throwable $th) {
+            $this->logger->error(sprintf('[%s] Error while storing transfer', __METHOD__), [
+                'transfer_dto' => $transferDTO->toArray(),
+                'message' => $th->getMessage(),
+                'exception' => $th,
+            ]);
+
+            DB::rollBack();
+
+            throw new RuntimeException('Unexpected error while storing transfer' );
         }
     }
 }

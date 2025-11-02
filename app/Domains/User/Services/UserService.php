@@ -48,4 +48,9 @@ readonly class UserService
             throw new RuntimeException('Unexpected error storing user' );
         }
     }
+
+    public function getByEmail(string $email): User
+    {
+        return $this->userRepository->findByEmail($email);
+    }
 }

@@ -6,7 +6,6 @@ use App\Domains\Wallet\DTOs\UpdateBalanceDTO;
 use App\Domains\Wallet\DTOs\WalletStoreDTO;
 use App\Domains\Wallet\Enums\TransactionType;
 use App\Domains\Wallet\Models\Wallet;
-use Carbon\Carbon;
 
 interface IWalletRepository
 {
