@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Users;
 
 use App\Domains\User\Services\AuthService;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\LoginRequest;
+use App\Http\Requests\Users\LoginRequest;
 use App\Http\Resources\Users\PersonalAccessTokenResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;

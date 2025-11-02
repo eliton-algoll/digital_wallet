@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Users;
 
 use App\Domains\User\DTOs\LoginDTO;
 use Illuminate\Foundation\Http\FormRequest;
