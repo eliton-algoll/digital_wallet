@@ -4,6 +4,7 @@ namespace App\Http\Requests\Wallet;
 
 use App\Domains\Wallet\DTOs\TransferDTO;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\ValidationException;
 
 class TransferRequest extends FormRequest
 {
@@ -15,9 +16,25 @@ class TransferRequest extends FormRequest
         ];
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function getValidatedData(): TransferDTO
     {
         $data = $this->validated();
+
+        $user = $this->user();
+
+        if ($user->email === $data['recipient']) {
+            $validator = $this->getValidatorInstance();
+
+            $validator->errors()->add(
+                'recipient',
+                'You cannot transfer funds to yourself.'
+            );
+
+            throw new ValidationException($validator);
+        }
 
         return new TransferDTO(
             user: $this->user(),
