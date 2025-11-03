@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Users;
 
-use App\Domains\User\DTOs\UserStoreDTO;
+use App\Domains\User\DTOs\StoreUserDTO;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UserStoreRequest extends FormRequest
+class StoreUserRequest extends FormRequest
 {
     public function rules(): array
     {
@@ -16,11 +16,11 @@ class UserStoreRequest extends FormRequest
         ];
     }
 
-    public function getValidatedData(): UserStoreDto
+    public function getValidatedData(): StoreUserDTO
     {
         $data = $this->validated();
 
-        return new UserStoreDto(
+        return new StoreUserDTO(
             name: $data['name'],
             email: $data['email'],
             password: $data['password']

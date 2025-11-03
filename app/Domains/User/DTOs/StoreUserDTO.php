@@ -4,7 +4,7 @@ namespace App\Domains\User\DTOs;
 
 use Ramsey\Uuid\Uuid;
 
-final readonly class UserStoreDTO
+final readonly class StoreUserDTO
 {
     public function __construct(
         public readonly string $name,

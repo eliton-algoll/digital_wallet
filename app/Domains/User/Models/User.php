@@ -4,6 +4,7 @@ namespace App\Domains\User\Models;
 
 use App\Domains\Wallet\Models\Wallet;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
@@ -49,5 +50,10 @@ class User extends Authenticatable
     public function wallet(): HasOne
     {
         return $this->hasOne(Wallet::class);
+    }
+
+    public function userWebhooks(): HasMany
+    {
+        return $this->hasMany(UserWebhook::class);
     }
 }

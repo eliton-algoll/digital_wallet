@@ -2,14 +2,14 @@
 
 namespace App\Infrastructure\Repositories\Users;
 
-use App\Domains\User\DTOs\UserStoreDTO;
+use App\Domains\User\DTOs\StoreUserDTO;
 use App\Domains\User\Models\User;
 use App\Domains\User\Repositories\IUserRepository;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UserRepository implements IUserRepository
 {
-    public function store(UserStoreDTO $data): User
+    public function store(StoreUserDTO $data): User
     {
         return User::create($data->toArray());
     }

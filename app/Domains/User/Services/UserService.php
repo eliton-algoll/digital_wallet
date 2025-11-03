@@ -2,7 +2,7 @@
 
 namespace App\Domains\User\Services;
 
-use App\Domains\User\DTOs\UserStoreDTO;
+use App\Domains\User\DTOs\StoreUserDTO;
 use App\Domains\User\Models\User;
 use App\Domains\User\Repositories\IUserRepository;
 use App\Domains\Wallet\DTOs\WalletStoreDTO;
@@ -21,32 +21,26 @@ readonly class UserService
     )
     { }
 
-    /**
-     * @throws Throwable
-     */
-    public function store(UserStoreDTO $userStoreDto): User {
-        try {
-            DB::beginTransaction();
+    public function store(StoreUserDTO $userStoreDto): User
+    {
+        return DB::transaction(function () use ($userStoreDto) {
+            try {
+                $user = $this->userRepository->store($userStoreDto);
 
-            $user = $this->userRepository->store($userStoreDto);
+                $walletStoreDto = new WalletStoreDTO($user);
+                $this->walletService->store($walletStoreDto);
 
-            $walletStoreDto = new WalletStoreDTO($user);
-            $this->walletService->store($walletStoreDto);
+                return $user;
+            } catch (Throwable $th) {
+                $this->logger->error(sprintf('[%s] Error storing user', __METHOD__), [
+                    'userStoreDto' => $userStoreDto->toArray(),
+                    'error' => $th->getMessage(),
+                    'exception' => $th,
+                ]);
 
-            DB::commit();
-
-            return $user;
-        } catch (Throwable $th) {
-            $this->logger->error(sprintf('[%s] Error storing user', __METHOD__), [
-                'userStoreDto' => $userStoreDto->toArray(),
-                'error' => $th->getMessage(),
-                'exception' => $th,
-            ]);
-
-            DB::rollBack();
-
-            throw new RuntimeException('Unexpected error storing user' );
-        }
+                throw new RuntimeException('Unexpected error storing user');
+            }
+        });
     }
 
     public function getByEmail(string $email): User

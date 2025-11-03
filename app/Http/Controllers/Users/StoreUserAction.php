@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Users;
 
 use App\Domains\User\Services\UserService;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Users\UserStoreRequest;
-use App\Http\Resources\Users\UserStoreResource;
+use App\Http\Requests\Users\StoreUserRequest;
+use App\Http\Resources\Users\StoreUserResource;
 use Illuminate\Http\JsonResponse;
 use Throwable;
 
-class UserStoreAction extends Controller
+class StoreUserAction extends Controller
 {
     public function __construct(private readonly UserService $userService) {
 
@@ -18,12 +18,12 @@ class UserStoreAction extends Controller
     /**
      * @throws Throwable
      */
-    public function __invoke(UserStoreRequest $request): JsonResponse
+    public function __invoke(StoreUserRequest $request): JsonResponse
     {
             $userStoreDto = $request->getValidatedData();
 
             $user = $this->userService->store($userStoreDto);
 
-            return response()->json(UserStoreResource::make($user));
+            return response()->json(StoreUserResource::make($user));
     }
 }

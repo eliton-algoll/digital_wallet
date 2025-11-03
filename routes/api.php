@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\Users\AuthAction;
-use App\Http\Controllers\Users\UserStoreAction;
+use App\Http\Controllers\Users\StoreUserAction;
+use App\Http\Controllers\Users\StoreUserWebhookAction;
 use App\Http\Controllers\Wallet\ShowBalanceAction;
 use App\Http\Controllers\Wallet\DepositAction;
 use App\Http\Controllers\Wallet\ListTransactionsAction;
@@ -14,7 +15,7 @@ Route::middleware('api')->group(function () {
         return response()->json(['api' => config('app.name'), 'env' => config('app.env'), 'time' => now()]);
     });
 
-    Route::post('users', UserStoreAction::class);
+    Route::post('users', StoreUserAction::class);
     Route::post('login', AuthAction::class);
 
     Route::middleware(['auth:sanctum', 'auth'])->group(function() {
@@ -24,6 +25,10 @@ Route::middleware('api')->group(function () {
             Route::post('transfer', TransferAction::class);
             Route::get('balance', ShowBalanceAction::class);
             Route::get('transactions', ListTransactionsAction::class);
+        });
+
+        Route::prefix('users')->group(function() {
+            Route::post('webhook', StoreUserWebhookAction::class);
         });
     });
 });
