@@ -1,13 +1,17 @@
 <?php
 
 use App\Http\Middleware\AuthenticateApi;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use App\Domains\Shared\Exceptions\DomainException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -24,23 +28,36 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
-                if ($e instanceof ValidationException) {
-                    return response()->json($e->errors(), 422);
-                }
+                return match (true) {
+                    $e instanceof ValidationException => response()->json([
+                        'message' => $e->getMessage(),
+                        'errors'  => $e->errors(),
+                    ], Response::HTTP_UNPROCESSABLE_ENTITY),
 
-                if ($e instanceof HttpException) {
-                    return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
-                }
+                    $e instanceof DomainException => response()->json([
+                        'message' => $e->getMessage(),
+                    ], $e->getStatusCode(), $e->getHeaders()),
 
-                if (method_exists($e, 'getStatusCode')) {
-                    return response()->json(['message' => $e->getMessage() ?: 'Error'], $e->getStatusCode());
-                }
+                    $e instanceof ModelNotFoundException => response()->json([
+                        'message' => 'Resource not found.',
+                    ], Response::HTTP_NOT_FOUND),
 
-                if ($e instanceof AuthenticationException) {
-                    return response()->json(['message' => 'Unauthenticated.'], 401);
-                }
+                    $e instanceof AuthenticationException => response()->json([
+                        'message' => 'Unauthenticated.',
+                    ], Response::HTTP_UNAUTHORIZED),
 
-                return response()->json(['message' => $e->getMessage() ?: 'Internal Server Error'], 500);
+                    $e instanceof AuthorizationException => response()->json([
+                        'message' => 'Forbidden.',
+                    ], Response::HTTP_FORBIDDEN),
+
+                    $e instanceof HttpExceptionInterface => response()->json([
+                        'message' => $e->getMessage(),
+                    ], $e->getStatusCode(), method_exists($e, 'getHeaders') ? $e->getHeaders() : []),
+
+                    default => response()->json([
+                        'message' => config('app.debug') ? $e->getMessage() : 'Internal Server Error',
+                    ], Response::HTTP_INTERNAL_SERVER_ERROR),
+                };
             }
 
             return null;

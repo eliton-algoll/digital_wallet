@@ -8,7 +8,6 @@ use App\Http\Requests\Users\LoginRequest;
 use App\Http\Resources\Users\PersonalAccessTokenResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpFoundation\Response;
 
 class AuthAction extends Controller
 {
@@ -23,6 +22,6 @@ class AuthAction extends Controller
     {
         $token = $this->authService->login($request->getValidatedData());
 
-        return response()->json(PersonalAccessTokenResource::make($token), Response::HTTP_OK);
+        return response()->json(PersonalAccessTokenResource::make($token));
     }
 }

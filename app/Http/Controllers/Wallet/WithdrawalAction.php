@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Wallet\WithdrawalRequest;
 use App\Http\Resources\Wallet\TransactionResource;
 use Illuminate\Http\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 
 class WithdrawalAction extends Controller
 {
@@ -22,6 +21,6 @@ class WithdrawalAction extends Controller
 
         $transaction = $this->transactionService->withdrawal($depositDto);
 
-        return response()->json(TransactionResource::make($transaction), Response::HTTP_OK);
+        return response()->json(TransactionResource::make($transaction));
     }
 }

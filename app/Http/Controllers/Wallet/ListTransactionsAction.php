@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Wallet\ListTransactionResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class ListTransactionsAction extends Controller
 {
@@ -38,8 +37,7 @@ class ListTransactionsAction extends Controller
                 'per_page' => $transactions->perPage(),
                 'total' => $transactions->total(),
             ]
-        ],
-            Response::HTTP_OK
+        ]
         );
     }
 }

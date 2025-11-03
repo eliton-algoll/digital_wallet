@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Wallet\WalletResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class ShowBalanceAction extends Controller
 {
@@ -22,6 +21,6 @@ class ShowBalanceAction extends Controller
 
         $wallet = $this->walletService->getWallet($user);
 
-        return response()->json(WalletResource::make($wallet), Response::HTTP_OK);
+        return response()->json(WalletResource::make($wallet) );
     }
 }

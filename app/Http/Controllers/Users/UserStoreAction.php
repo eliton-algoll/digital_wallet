@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Users\UserStoreRequest;
 use App\Http\Resources\Users\UserStoreResource;
 use Illuminate\Http\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class UserStoreAction extends Controller
 {
@@ -16,7 +16,7 @@ class UserStoreAction extends Controller
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function __invoke(UserStoreRequest $request): JsonResponse
     {
@@ -24,6 +24,6 @@ class UserStoreAction extends Controller
 
             $user = $this->userService->store($userStoreDto);
 
-            return response()->json(UserStoreResource::make($user), Response::HTTP_OK);
+            return response()->json(UserStoreResource::make($user));
     }
 }

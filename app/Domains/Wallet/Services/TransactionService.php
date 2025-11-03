@@ -9,13 +9,13 @@ use App\Domains\Wallet\DTOs\TransferDTO;
 use App\Domains\Wallet\DTOs\UpdateBalanceDTO;
 use App\Domains\Wallet\Enums\TransactionType;
 use App\Domains\Wallet\Enums\WalletBalanceAction;
+use App\Domains\Wallet\Exceptions\InsufficientBalanceException;
 use App\Domains\Wallet\Models\Transaction;
 use App\Domains\Wallet\Repositories\ITransactionRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 readonly class TransactionService
@@ -29,35 +29,21 @@ readonly class TransactionService
 
     }
 
-    public function deposit(TransactionStoreDTO $transactionStoreDTO): Transaction {
-        try {
-            DB::beginTransaction();
+    public function deposit(TransactionStoreDTO $transactionStoreDTO): Transaction
+    {
+        return DB::transaction(function () use ($transactionStoreDTO) {
+            try {
+                return $this->createTransaction($transactionStoreDTO);
+            } catch (Throwable $th) {
+                $this->logger->error(sprintf('[%s] Error storing deposit', __METHOD__), [
+                    'transaction_store_dto' => $transactionStoreDTO->toArray(),
+                    'message' => $th->getMessage(),
+                    'exception' => $th,
+                ]);
 
-            $transaction = $this->createTransaction($transactionStoreDTO);
-
-            DB::commit();
-
-            return $transaction;
-        } catch (ValidationException $e) {
-            $this->logger->debug(sprintf('[%s] Daily deposit limit reached.', __METHOD__), [
-                'wallet_store_dto' => $transactionStoreDTO->toArray(),
-                'message' => $e->getMessage(),
-            ]);
-
-            DB::rollBack();
-
-            throw $e;
-        } catch (Throwable $th) {
-            $this->logger->error(sprintf('[%s] Error storing user', __METHOD__), [
-                'wallet_store_dto' => $transactionStoreDTO->toArray(),
-                'message' => $th->getMessage(),
-                'exception' => $th,
-            ]);
-
-            DB::rollBack();
-
-            throw new RuntimeException('Unexpected error while storing deposit' );
-        }
+                throw $th;
+            }
+        });
     }
 
     /**
@@ -70,7 +56,7 @@ readonly class TransactionService
 
         if ($transactionStoreDTO->type === TransactionType::WITHDRAWAL || $transactionStoreDTO->type === TransactionType::TRANSFER_OUT) {
             if ($wallet->balance < $transactionStoreDTO->amount) {
-                throw ValidationException::withMessages(['amount' => ['Insufficient balance.']]);
+                throw new InsufficientBalanceException();
             }
         }
 
@@ -89,84 +75,58 @@ readonly class TransactionService
         return $transaction;
     }
 
-    public function withdrawal(TransactionStoreDTO $transactionStoreDTO): Transaction {
-        try {
-            DB::beginTransaction();
+    public function withdrawal(TransactionStoreDTO $transactionStoreDTO): Transaction
+    {
+        return DB::transaction(function () use ($transactionStoreDTO) {
+            try {
+                return $this->createTransaction($transactionStoreDTO);
+            } catch (Throwable $th) {
+                $this->logger->error(sprintf('[%s] Error storing withdrawal', __METHOD__), [
+                    'transaction_store_dto' => $transactionStoreDTO->toArray(),
+                    'message' => $th->getMessage(),
+                    'exception' => $th,
+                ]);
 
-            $transaction = $this->createTransaction($transactionStoreDTO);
-
-            DB::commit();
-
-            return $transaction;
-        } catch (ValidationException $e) {
-            $this->logger->debug(sprintf('[%s] Daily withdrawal limit reached.', __METHOD__), [
-                'wallet_store_dto' => $transactionStoreDTO->toArray(),
-                'message' => $e->getMessage(),
-            ]);
-
-            DB::rollBack();
-
-            throw $e;
-        } catch (Throwable $th) {
-            $this->logger->error(sprintf('[%s] Error storing user', __METHOD__), [
-                'wallet_store_dto' => $transactionStoreDTO->toArray(),
-                'message' => $th->getMessage(),
-                'exception' => $th,
-            ]);
-
-            DB::rollBack();
-
-            throw new RuntimeException('Unexpected error while storing deposit' );
-        }
+                throw $th;
+            }
+        });
     }
 
-    public function transfer(TransferDTO $transferDTO): Transaction {
-        try {
-            DB::beginTransaction();
+    public function transfer(TransferDTO $transferDTO): Transaction
+    {
+        return DB::transaction(function () use ($transferDTO) {
+            try {
+                $recipientUser = $this->userService->getByEmail($transferDTO->recipient);
 
-            $recipientUser = $this->userService->getByEmail($transferDTO->recipient);
+                $transferOutTransactionStoreDTO = new TransactionStoreDTO(
+                    user: $transferDTO->user,
+                    amount: $transferDTO->amount,
+                    type: TransactionType::TRANSFER_OUT,
+                    transferredWalletId: $recipientUser->wallet->id
+                );
 
-            $transferOutTransactionStoreDTO = new TransactionStoreDTO(
-                user: $transferDTO->user,
-                amount: $transferDTO->amount,
-                type: TransactionType::TRANSFER_OUT,
-                transferredWalletId: $recipientUser->wallet->id
-            );
+                $transferOutTransaction = $this->createTransaction($transferOutTransactionStoreDTO);
 
-            $transferOutTransaction = $this->createTransaction($transferOutTransactionStoreDTO);
+                $transferInTransactionStoreDTO = new TransactionStoreDTO(
+                    user: $recipientUser,
+                    amount: $transferDTO->amount,
+                    type: TransactionType::TRANSFER_IN,
+                    transferredWalletId: $transferDTO->user->wallet->id
+                );
 
-            $transferInTransactionStoreDTO = new TransactionStoreDTO(
-                user: $recipientUser,
-                amount: $transferDTO->amount,
-                type: TransactionType::TRANSFER_IN,
-                transferredWalletId:  $transferDTO->user->wallet->id
-            );
+                $this->createTransaction($transferInTransactionStoreDTO);
 
-            $this->createTransaction($transferInTransactionStoreDTO);
+                return $transferOutTransaction;
+            } catch (Throwable $th) {
+                $this->logger->error(sprintf('[%s] Error while storing transfer', __METHOD__), [
+                    'transfer_dto' => $transferDTO->toArray(),
+                    'message' => $th->getMessage(),
+                    'exception' => $th,
+                ]);
 
-            DB::commit();
-
-            return $transferOutTransaction;
-        } catch (ValidationException $e) {
-            $this->logger->debug(sprintf('[%s] insufficient balance.', __METHOD__), [
-                'transfer_dto' => $transferDTO->toArray(),
-                'message' => $e->getMessage(),
-            ]);
-
-            DB::rollBack();
-
-            throw $e;
-        } catch (Throwable $th) {
-            $this->logger->error(sprintf('[%s] Error while storing transfer', __METHOD__), [
-                'transfer_dto' => $transferDTO->toArray(),
-                'message' => $th->getMessage(),
-                'exception' => $th,
-            ]);
-
-            DB::rollBack();
-
-            throw new RuntimeException('Unexpected error while storing transfer' );
-        }
+                throw $th;
+            }
+        });
     }
 
     public function list(User $user, array $filters, array $sortBy, int $perPage): LengthAwarePaginator
