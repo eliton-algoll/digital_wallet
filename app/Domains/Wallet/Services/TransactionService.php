@@ -12,6 +12,7 @@ use App\Domains\Wallet\Enums\WalletBalanceAction;
 use App\Domains\Wallet\Exceptions\InsufficientBalanceException;
 use App\Domains\Wallet\Models\Transaction;
 use App\Domains\Wallet\Repositories\ITransactionRepository;
+use App\Events\TransactionCompletedEvent;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Psr\Log\LoggerInterface;
@@ -32,7 +33,11 @@ readonly class TransactionService
     {
         return DB::transaction(function () use ($transactionStoreDTO) {
             try {
-                return $this->createTransaction($transactionStoreDTO);
+                $transaction = $this->createTransaction($transactionStoreDTO);
+
+                event(new TransactionCompletedEvent($transaction));
+
+                return $transaction;
             } catch (Throwable $th) {
                 $this->logger->error(sprintf('[%s] Error storing deposit', __METHOD__), [
                     'transaction_store_dto' => $transactionStoreDTO->toArray(),
@@ -78,7 +83,11 @@ readonly class TransactionService
     {
         return DB::transaction(function () use ($transactionStoreDTO) {
             try {
-                return $this->createTransaction($transactionStoreDTO);
+                $transaction = $this->createTransaction($transactionStoreDTO);
+
+                event(new TransactionCompletedEvent($transaction));
+
+                return $transaction;
             } catch (Throwable $th) {
                 $this->logger->error(sprintf('[%s] Error storing withdrawal', __METHOD__), [
                     'transaction_store_dto' => $transactionStoreDTO->toArray(),
@@ -113,7 +122,10 @@ readonly class TransactionService
                     transferredWalletId: $transferDTO->user->wallet->id
                 );
 
-                $this->createTransaction($transferInTransactionStoreDTO);
+                $transferInTransaction = $this->createTransaction($transferInTransactionStoreDTO);
+
+                event(new TransactionCompletedEvent($transferOutTransaction));
+                event(new TransactionCompletedEvent($transferInTransaction));
 
                 return $transferOutTransaction;
             } catch (Throwable $th) {
