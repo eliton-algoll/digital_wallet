@@ -22,16 +22,12 @@ class WalletRepository implements IWalletRepository
         $wallet = $updateBalanceDTO->wallet;
 
         if ($updateBalanceDTO->balanceAction === WalletBalanceAction::CREDIT) {
-            $wallet->balance += $updateBalanceDTO->amount;
-
-            $wallet->save();
+            $wallet->increment('balance', $updateBalanceDTO->amount);
 
             return;
         }
 
-        $wallet->balance -= $updateBalanceDTO->amount;
-
-        $wallet->save();
+        $wallet->decrement('balance', $updateBalanceDTO->amount);
     }
 
     public function getDailyTransactionTotalByType(Wallet $wallet, TransactionType $transactionType): float

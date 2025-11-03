@@ -14,7 +14,6 @@ use App\Domains\Wallet\Models\Transaction;
 use App\Domains\Wallet\Repositories\ITransactionRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -46,9 +45,6 @@ readonly class TransactionService
         });
     }
 
-    /**
-     * @throws ValidationException
-     */
     private function createTransaction(TransactionStoreDTO $transactionStoreDTO): transaction {
         $wallet = $transactionStoreDTO->user->wallet;
 
@@ -62,7 +58,10 @@ readonly class TransactionService
 
         $transaction = $this->transactionRepository->store($transactionStoreDTO);
 
-        $updateBalanceType = in_array($transactionStoreDTO->type->value, [TransactionType::DEPOSIT->value, TransactionType::TRANSFER_IN->value]) ? WalletBalanceAction::CREDIT : WalletBalanceAction::DEBIT;
+        $updateBalanceType = match ($transactionStoreDTO->type) {
+            TransactionType::DEPOSIT, TransactionType::TRANSFER_IN => WalletBalanceAction::CREDIT,
+            TransactionType::WITHDRAWAL, TransactionType::TRANSFER_OUT => WalletBalanceAction::DEBIT,
+        };
 
         $updateBalanceDTO = new UpdateBalanceDTO(
             wallet: $wallet,
