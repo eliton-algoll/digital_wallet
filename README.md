@@ -11,9 +11,9 @@ API RESTful para gerenciar uma carteira digital com cadastro, autenticação, co
 - Docker
 
 ## Requisitos
-- PHP 8.2+
-- composer
-- Docker
+- [PHP 8.2+](https://www.php.net/)
+- [Composer](https://getcomposer.org/)
+- [Docker](https://docs.docker.com/engine/install/)
 
 ## Configuração
 1. Clonar e instalar dependências
