@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-readonly class UserService
+class UserService
 {
     public function __construct(
         private readonly IUserRepository $userRepository,

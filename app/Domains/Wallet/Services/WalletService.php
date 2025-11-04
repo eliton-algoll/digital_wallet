@@ -12,7 +12,7 @@ use App\Domains\Wallet\Repositories\IWalletRepository;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-readonly class WalletService
+class WalletService
 {
     public function __construct(
         private IWalletRepository $walletRepository,

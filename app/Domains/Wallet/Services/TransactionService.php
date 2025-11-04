@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-readonly class TransactionService
+class TransactionService
 {
     public function __construct(
         private readonly ITransactionRepository $transactionRepository,
