@@ -10,6 +10,11 @@ API RESTful para gerenciar uma carteira digital com cadastro, autenticação, co
 - Testes: PHPUnit
 - Docker
 
+## Requisitos
+- PHP 8.2+
+- composer
+- Docker
+
 ## Configuração
 1. Clonar e instalar dependências
 ```bash
