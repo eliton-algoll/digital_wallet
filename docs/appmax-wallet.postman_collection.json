@@ -1,0 +1,238 @@
+{
+	"info": {
+		"_postman_id": "a8020383-fcea-469b-9bb9-5b68911ddcc9",
+		"name": "appmax-wallet",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "6685171"
+	},
+	"item": [
+		{
+			"name": "users",
+			"item": [
+				{
+					"name": "store",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Elaine\",\n    \"email\": \"elaine2@algoll.com.br\",\n    \"password\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{url}}/api/users"
+					},
+					"response": []
+				},
+				{
+					"name": "store webhook",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{personal_access_oken}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"url\": \"https://webhook.site/62a8c8a7-ef72-4ddc-a8f9-f49927bbb89f\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{url}}/api/users/webhook"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "wallet",
+			"item": [
+				{
+					"name": "deposit",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{personal_access_oken}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": 2000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{url}}/api/wallet/deposit"
+					},
+					"response": []
+				},
+				{
+					"name": "withdrawal",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{personal_access_oken}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": 100000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{url}}/api/wallet/withdrawal"
+					},
+					"response": []
+				},
+				{
+					"name": "transfer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{personal_access_oken}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"recipient\":\"elaine@algoll.com.br\",\n    \"amount\": 200\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{url}}/api/wallet/transfer"
+					},
+					"response": []
+				},
+				{
+					"name": "balance",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{personal_access_oken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{url}}/api/wallet/balance"
+					},
+					"response": []
+				},
+				{
+					"name": "transactions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{personal_access_oken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/wallet/transactions",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"wallet",
+								"transactions"
+							],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "200",
+									"disabled": true
+								},
+								{
+									"key": "sort_by",
+									"value": "created_at",
+									"disabled": true
+								},
+								{
+									"key": "direction",
+									"value": "asc",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "TRANSFER_OUT",
+									"disabled": true
+								},
+								{
+									"key": "created_at",
+									"value": "2025-11-02",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const jsonData = pm.response.json();",
+							"const token = jsonData.token;",
+							"pm.environment.set(\"personal_access_oken\", token);",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"eliton@algoll.com.br\",\n    \"password\": \"123456\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}/api/login"
+			},
+			"response": []
+		}
+	]
+}
